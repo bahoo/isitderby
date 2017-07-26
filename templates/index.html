@@ -73,7 +73,7 @@
             <p class="emoji">&#128052;</p>
             <h2>SOON</h2>
             <p>Kentucky Derby {{ next_derby_number }} runs on <strong>{{ next_derby_date.strftime("%A, %B %-m%%(ord)s %Y") % {'ord': ( "st" if next_derby_date.day[-1] == "1" else ("nd" if next_derby_date.day[-1] == "2" else "th")) } }}.</strong></p>
-            <p>Only <strong>{{ days_til_next_derby }} day{{ "s" if next_derby_days_til > 1 else "" }}</strong> 'til next Derby!</p>
+            <p>Only <strong>{{ days_til_next_derby }} day{{ "s" if days_til_next_derby > 1 else "" }}</strong> 'til next Derby!</p>
          </div>
       {% endif %}
 

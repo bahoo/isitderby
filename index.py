@@ -1,4 +1,4 @@
-from flask import jsonify, Flask, render_template, request
+from flask import Flask, jsonify, make_response, render_template, request
 from math import ceil
 from datetime import datetime, timedelta
 import pytz
@@ -67,14 +67,48 @@ def index():
     context = {
         'is_it_derby': is_it_derby,
         'next_derby_number': next_derby.year - 1874,
-        'next_derby_date': next_derby.isoformat(),
+        'next_derby_date': next_derby,
         'days_til_next_derby': (next_derby - midnight).days
     }
 
     if request_wants_json():
+        context['next_derby_date'] = next_derby.isoformat()
         return jsonify(**context)
 
     return render_template('index.html', **context)
+
+
+@app.route('/feed')
+def feed():
+
+    is_it_derby = is_derby()
+    midnight = EASTERN.localize(datetime.today().replace(hour=0, minute=0, second=0, microsecond=0))
+
+    description = "No." if not is_it_derby else "YES, FRIENDS! YES! IT'S THE DERBY! IT'S THE GODDAMN KENTUCKY DERBY, GO AND TELL THE NEWS!"
+
+    content = """<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Is It Derby?</title>
+        <link>http://www.isitderby.com/feed</link>
+        <atom:link href="http://www.isitderby.com/feed" rel="self" type="application/rss+xml" />
+        <description>Well, is it?</description>
+        <language>en-us</language>
+        <item>
+            <title>Is It Derby?</title>
+            <description>%(description)s</description>
+            <link>http://www.isitderby.com/?%(midnight_isoformat)s</link>
+            <pubDate>%(midnight_utc_string)s</pubDate>
+            <guid>http://www.isitderby.com/?%(midnight_isoformat)s</guid>
+        </item>
+    </channel>
+</rss>""" % {
+        'description': description,
+        'midnight_isoformat': midnight.isoformat(),
+        'midnight_utc_string': midnight.strftime("%a, %d %b %Y %H:%M:%S %z")
+    }
+
+    return make_response(content, {'Content-Type': "application/rss+xml"})
 
 
 if __name__ == "__main__":
